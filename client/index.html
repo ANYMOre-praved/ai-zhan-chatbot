@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>AI ZHAN</title>
+  <style>
+    body { font-family: sans-serif; padding: 1em; background: #f9f9f9; }
+    #chat { max-width: 600px; margin: auto; }
+    .msg { margin: 1em 0; }
+    .user { text-align: right; color: #444; }
+    .bot { text-align: left; color: #10a37f; }
+  </style>
+</head>
+<body>
+  <div id="chat"></div>
+  <form id="form">
+    <input id="input" placeholder="Сообщение..." required />
+    <button>Отправить</button>
+  </form>
+  <script>
+    const chat = document.getElementById("chat");
+    const form = document.getElementById("form");
+    const input = document.getElementById("input");
+
+    const messages = [
+      { role: "system", content: "Ты helpful AI-помощник. Отвечай на русском." }
+    ];
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text) return;
+      input.value = "";
+      add("user", text);
+      messages.push({ role: "user", content: text });
+
+      const res = await fetch("http://localhost:3000/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages })
+      });
+
+      const data = await res.json();
+      add("bot", data.reply);
+      messages.push({ role: "assistant", content: data.reply });
+    };
+
+    function add(sender, text) {
+      const div = document.createElement("div");
+      div.className = `msg ${sender}`;
+      div.textContent = text;
+      chat.appendChild(div);
+    }
+  </script>
+</body>
+</html>
