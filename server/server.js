@@ -1,35 +1,36 @@
-const express = require("express");
-const cors = require("cors");
-const { Configuration, OpenAIApi } = require("openai");
+import express from "express";
+import cors from "cors";
+import { OpenAI } from "openai";
+import dotenv from "dotenv";
+
+// Загрузим переменные окружения из .env
+dotenv.config();
 
 const app = express();
-const PORT = 3000;
-
-// ✅ ВСТАВЬ СВОЙ КЛЮЧ СЮДА
-const configuration = new Configuration({
-  apiKey: "sk-ВАШ_КЛЮЧ_ЗДЕСЬ"
+const PORT = process.env.PORT || 3000;
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 app.use(cors());
 app.use(express.json());
 
 app.post("/chat", async (req, res) => {
+  const { messages } = req.body;
+
   try {
-    const { messages } = req.body;
-    const completion = await openai.createChatCompletion({
+    const response = await openai.chat.completions.create({
       model: "gpt-3.5-turbo",
-      messages,
+      messages: messages,
       temperature: 0.7,
     });
-
-    res.json({ reply: completion.data.choices[0].message.content });
+    res.json(response);
   } catch (error) {
-    console.error(error.response?.data || error.message);
-    res.status(500).json({ error: "Ошибка запроса к OpenAI" });
+    console.error(error);
+    res.status(500).json({ error: "Error from OpenAI API" });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ Сервер запущен: http://localhost:${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
